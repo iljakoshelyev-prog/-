@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Calculator</title>
+<style>
+*{box-sizing:border-box}
+body{margin:0;min-height:100vh;background:#101114;color:white;font-family:Arial,sans-serif}
+.calculator{width:100%;min-height:100vh;padding:35px 6%;display:flex;flex-direction:column;gap:25px}
+.header{display:flex;justify-content:space-between;align-items:center}
+.header h1{font-size:25px;margin:0}.header span{color:#888;font-size:14px}
+.display{flex:1;min-height:170px;display:flex;flex-direction:column;justify-content:flex-end;align-items:flex-end;padding:25px 10px;overflow:hidden}
+.previous{color:#888;font-size:25px;min-height:35px}
+.current{font-size:clamp(55px,10vw,105px);font-weight:300;overflow-wrap:anywhere}
+.buttons{display:grid;grid-template-columns:repeat(4,1fr);grid-template-rows:repeat(5,minmax(75px,1fr));gap:13px;flex:2}
+button{border:0;border-radius:18px;background:#25272d;color:white;font-size:clamp(24px,3vw,35px);cursor:pointer;transition:.15s}
+button:hover{background:#393c44}button:active{transform:scale(.96)}
+.action{background:#343741;color:#aeb8ff}.operator{background:#343741;color:#8fa2ff}
+.operator.active{background:#687cf5;color:white}.equal{background:#6178ed;grid-row:span 2}
+.equal:hover{background:#7890ff}.zero{grid-column:span 2}
+.footer{text-align:center;color:#555;font-size:13px;padding-top:5px}
+@media(max-width:600px){.calculator{padding:20px 15px;gap:15px}.buttons{gap:8px;grid-template-rows:repeat(5,minmax(65px,1fr))}button{border-radius:13px}}
+</style>
+</head>
+<body>
+<div class="calculator">
+<div class="header"><h1>Calculator.</h1><span>ONLINE CALCULATOR</span></div>
+<div class="display"><div class="previous" id="previous"></div><div class="current" id="current">0</div></div>
+<div class="buttons">
+<button class="action" onclick="clearAll()">AC</button><button class="action" onclick="toggleSign()">+/−</button><button class="action" onclick="percent()">%</button><button class="operator" data-op="/" onclick="chooseOperator('/')">÷</button>
+<button onclick="digit('7')">7</button><button onclick="digit('8')">8</button><button onclick="digit('9')">9</button><button class="operator" data-op="*" onclick="chooseOperator('*')">×</button>
+<button onclick="digit('4')">4</button><button onclick="digit('5')">5</button><button onclick="digit('6')">6</button><button class="operator" data-op="-" onclick="chooseOperator('-')">−</button>
+<button onclick="digit('1')">1</button><button onclick="digit('2')">2</button><button onclick="digit('3')">3</button><button class="operator" data-op="+" onclick="chooseOperator('+')">+</button>
+<button class="zero" onclick="digit('0')">0</button><button onclick="decimal()">.</button><button class="equal" onclick="calculate()">=</button>
+</div><div class="footer">Calculator © 2026</div>
+</div>
+<script>
+const current=document.getElementById("current"),previous=document.getElementById("previous");
+let value="0",firstNumber=null,operator=null,reset=false,justCalculated=false;
+function update(){current.textContent=value;document.querySelectorAll(".operator").forEach(btn=>btn.classList.toggle("active",btn.dataset.op===operator))}
+function formatNumber(n){if(!Number.isFinite(n))return"Error";return String(Number(n.toPrecision(12)))}
+function digit(n){if(value==="Error")clearAll();if(reset||justCalculated){value=n;reset=false;justCalculated=false}else if(value.length<16)value=value==="0"?n:value+n;update()}
+function decimal(){if(value==="Error")clearAll();if(reset||justCalculated){value="0.";reset=false;justCalculated=false}else if(!value.includes("."))value+=".";update()}
+function symbol(op){return{"+":"+","-":"−","*":"×","/":"÷"}[op]}
+function chooseOperator(op){if(value==="Error")return;if(operator!==null&&!reset){calculate();if(value==="Error")return}firstNumber=Number(value);operator=op;previous.textContent=value+" "+symbol(op);reset=true;justCalculated=false;update()}
+function calculate(){if(operator===null||firstNumber===null||reset)return;const second=Number(value);let result;switch(operator){case"+":result=firstNumber+second;break;case"-":result=firstNumber-second;break;case"*":result=firstNumber*second;break;case"/":if(second===0){value="Error";previous.textContent="Division by zero";firstNumber=null;operator=null;reset=true;update();return}result=firstNumber/second;break}previous.textContent=firstNumber+" "+symbol(operator)+" "+second+" =";value=formatNumber(result);firstNumber=null;operator=null;reset=true;justCalculated=true;update()}
+function clearAll(){value="0";firstNumber=null;operator=null;reset=false;justCalculated=false;previous.textContent="";update()}
+function toggleSign(){if(value==="Error"||value==="0")return;value=value.startsWith("-")?value.slice(1):"-"+value;update()}
+function percent(){if(value==="Error")return;value=formatNumber(Number(value)/100);reset=false;update()}
+function backspace(){if(value==="Error"||reset||justCalculated)return;value=value.length>1?value.slice(0,-1):"0";if(value==="-")value="0";update()}
+document.addEventListener("keydown",e=>{if(/^[0-9]$/.test(e.key))digit(e.key);else if(e.key===".")decimal();else if(["+","-","*","/"].includes(e.key))chooseOperator(e.key);else if(e.key==="Enter"||e.key==="=")calculate();else if(e.key==="Escape")clearAll();else if(e.key==="Backspace")backspace();else if(e.key==="%")percent()});
+update();
+</script>
+</body>
+</html>
